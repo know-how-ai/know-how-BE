@@ -1,4 +1,4 @@
-name: Running Test then Merge by Dev branch
+name: Running Test for PR to Main
 
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 
