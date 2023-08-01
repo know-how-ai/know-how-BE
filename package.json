@@ -1,0 +1,35 @@
+{
+    "name": "know-how-be",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js",
+        "test": "jest --setupFiles dotenv/config --detectOpenHandles --forceExit",
+        "test:ci": "jest --setupFiles dotenv/config --detectOpenHandles --forceExit --coverage"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/know-how-ai/know-how-BE.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/know-how-ai/know-how-BE/issues"
+    },
+    "homepage": "https://github.com/know-how-ai/know-how-BE#readme",
+    "dependencies": {
+        "cookie-parser": "^1.4.6",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-session": "^1.17.3",
+        "jest": "^29.6.2",
+        "morgan": "^1.10.0",
+        "supertest": "^6.3.3"
+    },
+    "devDependencies": {
+        "eslint-plugin-jest-dom": "^5.0.1",
+        "nodemon": "^3.0.1"
+    }
+}
