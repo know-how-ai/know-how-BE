@@ -49,9 +49,4 @@ app.get("/", (req, res) => {
     });
 });
 
-app.listen(app.get(PORT), () => {
-    console.log(app.get(PORT), "번 포트에서 대기중입니다. ✅");
-    console.log(`>>> http://localhost:${PORT_NUMBER}/ <<<`);
-});
-
 module.exports = app;
