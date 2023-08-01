@@ -6,9 +6,11 @@ describe("견본 테스트", () => {
         expect(1).toBe(1);
     });
 
-    test("App.js", async () => {
-        const res = await request(app).get("/");
-
-        expect(res.statusCode).toBe(200 || 304);
+    test("App.js", () => {
+        return request(app)
+            .get("/")
+            .then((res) => {
+                expect(res.statusCode).toBe(200 || 304);
+            });
     });
 });
