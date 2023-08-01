@@ -4,8 +4,7 @@ run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 
 on:
     push:
-        branches:
-            - dev # 실행할 브랜치
+        branches: ["songforthemute", "error-coder"]
 
 jobs:
     test:
