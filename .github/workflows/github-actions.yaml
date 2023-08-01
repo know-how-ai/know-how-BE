@@ -1,0 +1,41 @@
+name: Running Test then Merge by Dev branch
+
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+
+on:
+    push:
+        branches:
+            - dev # 실행할 브랜치
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        # outputs:
+        #     output1: ${{ steps.testjob.outputs.test }}
+        steps:
+            - name: Starts out Test by Jest
+              run: |
+                  echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+                  echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+                  echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+                  echo "🖥️ The workflow is now ready to test your code on the runner."
+
+            - name: Init actions/checkout
+              uses: actions/checkout@v3
+
+            - name: Init actions/node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run Jest test
+              run: npm run test:ci
+
+            - run: echo "🍏 This job's status is ${{ job.status }}."
+
+            # - name: 🍏 Set state about test status
+            #   id: testjob
+            #   run: echo "test=${{ job.status }}" >> "$GITHUB_OUTPUT"
