@@ -10,7 +10,7 @@ describe("견본 테스트", () => {
         return request(app)
             .get("/")
             .then((res) => {
-                expect(res.statusCode).toBe(200 || 304);
+                expect(res.statusCode).toBe(200);
             });
     });
 });
