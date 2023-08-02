@@ -1,9 +1,26 @@
 {
-    "parserOptions": {
-        "ecmaVersion": "latest"
-    },
-
-    "env": {
-        "es6": true
-    }
+  "root": true,
+  "env": {
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "ignorePatterns": ["jest.*.js"],
+  "extends": ["plugin:jest/recommended"],
+  "plugins": ["jest"],
+  "rules": {
+    "import/extensions": [
+      "error",
+      {
+        "tsx": "never",
+        "ts": "never",
+        "js": "never",
+        "jsx": "never"
+      }
+    ]
+  }
 }
