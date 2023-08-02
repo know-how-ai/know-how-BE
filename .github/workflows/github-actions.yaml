@@ -3,64 +3,64 @@ name: Running Test for PR to Main
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 
 on:
-    push:
-        branches: ["songforthemute", "error-coder"]
+  push:
+    branches: ["songforthemute", "error-coder"]
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        # outputs:
-        #     output1: ${{ steps.testjob.outputs.test }}
-        steps:
-            - name: Starts out Test by Jest
-              run: |
-                  echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-                  echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-                  echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-                  echo "🖥️ The workflow is now ready to test your code on the runner."
+  test:
+    runs-on: ubuntu-latest
+    # outputs:
+    #     output1: ${{ steps.testjob.outputs.test }}
+    steps:
+      - name: Starts out Test by Jest
+        run: |
+          echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+          echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+          echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+          echo "🖥️ The workflow is now ready to test your code on the runner."
 
-            - name: Init actions/checkout
-              uses: actions/checkout@v3
+      - name: Init actions/checkout
+        uses: actions/checkout@v3
 
-            - name: Init actions/node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: "16"
+      - name: Init actions/node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
 
-            - name: Generate Env variables
-              run: |
-                  echo "COOKIE_SECRET=$COOKIE_SECRET" >> .env
-              env:
-                  COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+      - name: Generate Env variables
+        run: |
+          echo "COOKIE_SECRET=$COOKIE_SECRET" >> .env
+        env:
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
 
-            - name: Cache deps
-              id: cache
-              uses: actions/cache@v3
-              with:
-                  # cache의 대상을 정합니다. npm에서 의존성이 설치되는 디렉터리인 node_modules를 대상으로 합니다.
-                  path: "**/node_modules"
-                  # cache를 무효화하를 결정하는 기준은 의존성이 변경되면 함께 변경되는 파일인 package-lock.json을 기준으로 합니다.
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-                  # key가 유효하지 않은 경우 runner의 운영체제 값과 node라는 suffix를 key로 복구합니다.
-                  # 결과적으로 package-lock.json이 변경되지 않았다면 캐싱된 node_modules를 사용합니다.
-                  # 만약 복구될 캐시가 없다면 아래에서 사용할 cache-hit는 false가 됩니다.
-                  restore-keys: |
-                      ${{ runner.os }}-node-
+      - name: Cache deps
+        id: cache
+        uses: actions/cache@v3
+        with:
+          # cache의 대상을 정합니다. npm에서 의존성이 설치되는 디렉터리인 node_modules를 대상으로 합니다.
+          path: "**/node_modules"
+          # cache를 무효화하를 결정하는 기준은 의존성이 변경되면 함께 변경되는 파일인 package-lock.json을 기준으로 합니다.
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          # key가 유효하지 않은 경우 runner의 운영체제 값과 node라는 suffix를 key로 복구합니다.
+          # 결과적으로 package-lock.json이 변경되지 않았다면 캐싱된 node_modules를 사용합니다.
+          # 만약 복구될 캐시가 없다면 아래에서 사용할 cache-hit는 false가 됩니다.
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-            # npm ci: npm install과 같은 역할. (clean install)
-            - name: Install dependencies
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: npm ci
+      # npm ci: npm install과 같은 역할. (clean install)
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
 
-            - name: Run Jest test
-              run: npm run test:ci
+      - name: Run Jest test
+        run: npm run test:ci
 
-            # --if-present: 스크립트가 존재하면 실행, 아닐 경우 패스.
-            - name: If build
-              run: npm run build --if-present
+      # --if-present: 스크립트가 존재하면 실행, 아닐 경우 패스.
+      - name: If build
+        run: npm run build --if-present
 
-            - run: echo "🍏 This job's status is ${{ job.status }}."
+      - run: echo "🍏 This job's status is ${{ job.status }}."
 
-            # - name: 🍏 Set state about test status
-            #   id: testjob
-            #   run: echo "test=${{ job.status }}" >> "$GITHUB_OUTPUT"
+      # - name: 🍏 Set state about test status
+      #   id: testjob
+      #   run: echo "test=${{ job.status }}" >> "$GITHUB_OUTPUT"
