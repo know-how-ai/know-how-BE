@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const cors = require("cors");
 
 // for use env variables
 dotenv.config();
@@ -41,8 +42,19 @@ app.use(
   }),
 );
 
+// for resolve 'cors' issue
+const corsMiddleware = cors({
+  origin: "http://localhost:3000",
+  optionsSuccessStatus: 200,
+});
+
+const { kogptRouter, userRouter } = require("./routes");
+
+app.use("/user", userRouter);
+app.use("/kogpt", kogptRouter);
+
 // GET / routing
-app.get("/", (req, res) => {
+app.get("/", corsMiddleware, (req, res) => {
   return res.status(200).json({
     message: "Hi!",
     status: 200,
