@@ -29,32 +29,32 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 
 // for using session
 app.use(
-    session({
-        resave: false,
-        saveUninitialized: false,
-        secret: process.env.COOKIE_SECRET,
-        cookie: {
-            httpOnly: true,
-            secure: false,
-        },
-        name: "session-cookie",
-    })
+  session({
+    resave: false,
+    saveUninitialized: false,
+    secret: process.env.COOKIE_SECRET,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+    },
+    name: "session-cookie",
+  }),
 );
 
 // GET / routing
 app.get("/", (req, res) => {
-    return res.status(200).json({
-        message: "Hi!",
-        status: 200,
-    });
+  return res.status(200).json({
+    message: "Hi!",
+    status: 200,
+  });
 });
 
 // Error handling
 app.use((err, req, res, next) => {
-    return res.status(err.status || 500).json({
-        message: err.message,
-        status: err.status || 500,
-    });
+  return res.status(err.status || 500).json({
+    message: err.message,
+    status: err.status || 500,
+  });
 });
 
 module.exports = app;
