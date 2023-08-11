@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
+
 // user/coverletter 라우터
 router.post("/coverletter", (req, res) => {
   const { coverletter, job } = req.body;
@@ -21,6 +22,7 @@ router.post("/coverletter", (req, res) => {
   });
 });
 
+
 // user/job 라우터
 router.post("/job", (req, res) => {
   const { job, domain, project, description, skill, feature } = req.body;
@@ -39,6 +41,7 @@ router.post("/job", (req, res) => {
     },
   });
 });
+
 
 // user/interview 라우터
 router.post("/interview", (req, res) => {
