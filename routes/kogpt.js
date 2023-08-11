@@ -1,34 +1,32 @@
 const express = require("express");
 const router = express.Router();
 
-//  /user/coverletter 라우터
+
+// user/coverletter 라우터
 router.post("/coverletter", (req, res) => {
-  const {
-    session: { id },
-    body: { coverletter, job },
-  } = req;
+  const { coverletter, job } = req.body;
+  const { id } = req.session;
 
   const prompt =
-    `${job}에 지원하고자 자기소개서를 다음과 같이 작성했습니다. ` +
+    `${job}에 지원하고자 자기소개서를 다음과 같이 작성했습니다.` +
     coverletter +
     "이 자기소개서에서 잘한 점 3가지와 못한 점 3가지를 찾고, 총평을 작성해주세요.";
 
   return res.status(200).json({
     status: true,
     data: {
-      good: ["1. ... ", "2. ... ", "3. ... "],
-      bad: ["1. ... ", "2. ... ", "3. ... "],
-      overall: "So, ... ",
+      good: ["1. ...", "2. ...", "3. ..."],
+      bad: ["1. ...", "2. ...", "3. ..."],
+      overall: "So, ...",
     },
   });
 });
 
-//  /user/job 라우터
+
+// user/job 라우터
 router.post("/job", (req, res) => {
-  const {
-    session: { id },
-    body: { job, domain, project, description, skill, feature },
-  } = req;
+  const { job, domain, project, description, skill, feature } = req.body;
+  const { id } = req.session;
 
   const prompt =
     `${domain} 업계의 ${job}으로 취업하려고 합니다.` +
@@ -39,26 +37,25 @@ router.post("/job", (req, res) => {
   return res.status(200).json({
     status: true,
     data: {
-      questions: ["1. ... ", "2. ... ", "3. ... ", "4. ... ", "5. ..."],
+      questions: ["1. ...", "2. ...", "3. ...", "4. ...", "5. ..."],
     },
   });
 });
 
-//  /user/interview 라우터
+
+// user/interview 라우터
 router.post("/interview", (req, res) => {
-  const {
-    session: { id },
-    body: { personalities },
-  } = req;
+  const { personalities } = req.body;
+  const { id } = req.session;
 
   const prompt =
-    `${personalities}의 성향을 가진 사람에게 ` +
+    `${personalities}의 성향을 가진 사람에게` +
     "어울리는 직업 5가지를 각각 해당 직업에서 중요한 성향과 함께 추천해주세요.";
 
   return res.status(200).json({
     status: true,
     data: {
-      recommendations: ["1. ... ", "2. ... ", "3. ... ", "4. ... ", "5. ..."],
+      recommendations: ["1. ...", "2. ...", "3. ...", "4. ...", "5. ..."],
     },
   });
 });
