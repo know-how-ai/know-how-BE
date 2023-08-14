@@ -25,7 +25,7 @@ router.post("/new", (req, res) => {
     resetQuestion &&
     resetAnswer
   );
-  if (!isEmpty) {
+  if (isEmpty) {
     const error = "폼 값이 부적절합니다.";
     return res.status().json({
       status,
@@ -53,7 +53,7 @@ router.post("/new", (req, res) => {
     });
   }
 
-  // 패스워드 && 해싱 && 솔팅 - bcrypt
+  // 패스워드 해싱 && 솔팅 - bcrypt
 
   // 데이터베이스에 새 row 생성 - Users.create
   const newUser = null; // newUser.dataValues
@@ -79,7 +79,7 @@ router.post("/in", (req, res) => {
   let status = false;
 
   const isEmpty = !(email && password);
-  if (!isEmpty) {
+  if (isEmpty) {
     const error = "폼 값이 부적절합니다.";
     return res.status().json({
       status,
@@ -188,7 +188,7 @@ router
 
     status = true;
 
-    res.status(200).json({
+    return res.status(200).json({
       status,
       data: {
         email,
@@ -229,7 +229,7 @@ router
 
     const user = true; // Users.findOne
 
-    const isCorrect = user.resetAnswer === resetAnswer;
+    const isCorrect = user.dataValues.resetAnswer === resetAnswer;
     if (!isCorrect) {
       const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
       return res.status().json({
@@ -255,7 +255,7 @@ router.get("/log", (req, res) => {
   let status = false;
 
   const isEmpty = id === undefined;
-  if (!isEmpty) {
+  if (isEmpty) {
     const error = "잘못된 요청입니다.";
     return res.status(401).json({
       status,
