@@ -34,12 +34,12 @@ class Users extends Model {
         last_logged_in: {
           type: DataTypes.DATE,
           allowNull: false,
-          defaultValue: DataTypes.NOW(),
+          defaultValue: DataTypes.DATEONLY,
         },
         point: {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
-          defaultValue: 5,
+          defaultValue: 0,
         },
         created_at: {
           type: DataTypes.DATE,
