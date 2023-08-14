@@ -48,7 +48,7 @@ class PointLogs extends Model {
             name: "PRIMARY",
             unique: true,
             using: "BTREE",
-            fields: [{ name: "id" }],
+            fields: [{ name: "id", order: "DESC" }],
           },
           {
             name: "user_id_idx",
