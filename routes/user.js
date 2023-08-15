@@ -1,10 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const Users = require("../models/users");
-const pointLogs = require("../models/pointLogs");
+const {
+  getUserByEmail,
+  createNewUser,
+  hashValue,
+  compareHashed,
+  updateUser,
+} = require("../controllers/user");
+const {
+  earnPointByfirstLogin,
+  getPointLogsBySkip,
+} = require("../controllers/point");
 
 // user/new 라우터
-router.post("/new", (req, res) => {
+router.post("/new", async (req, res) => {
   const {
     email,
     password,
@@ -44,7 +53,7 @@ router.post("/new", (req, res) => {
   }
 
   // 요청 이메일로 이미 가입된 사용자 있는지 검증
-  const user = null; // Users.findOne
+  const user = await getUserByEmail(email); // Users.findOne
   if (user) {
     const error = "이미 가입한 이메일입니다.";
     return res.status().json({
@@ -53,27 +62,33 @@ router.post("/new", (req, res) => {
     });
   }
 
-  // 패스워드 해싱 && 솔팅 - bcrypt
-
   // 데이터베이스에 새 row 생성 - Users.create
-  const newUser = null; // newUser.dataValues
+  const newUser = await createNewUser({
+    email,
+    password: await hashValue(password),
+    username,
+    reset_question: resetQuestion,
+    reset_answer: resetAnswer,
+  });
 
-  // 최초 로그인으로 인한 포인트 지급 로그 생성 - PointLogs.create
+  const newUserPointLog = await earnPointByfirstLogin(newUser.dataValues.id);
 
   status = true;
+
+  // 로그인 처리 - 세션 세이브
 
   return res.status(200).json({
     status,
     data: {
-      id: 0, // newUser.dataValues.id
+      id: newUser.dataValues.id,
       username,
-      point: 5, // newUser.dataValues.point
+      point: newUserPointLog.dataValues.amount,
     },
   });
 });
 
 // user/in 라우터
-router.post("/in", (req, res) => {
+router.post("/in", async (req, res) => {
   const { email, password } = req.body;
 
   let status = false;
@@ -88,7 +103,7 @@ router.post("/in", (req, res) => {
   }
 
   // 유저 검색 - Users.findOne
-  const user = null; // user.dataValues
+  const user = await getUserByEmail(email);
 
   // 해당 이메일로 가입한 사용자가 있는지 검증
   if (!user) {
@@ -100,7 +115,10 @@ router.post("/in", (req, res) => {
   }
 
   // 해당 이메일로 가입한 사용자의 패스워드가 일치하는지 검증
-  const isAccordPassword = null; // bcrypt.compare
+  const isAccordPassword = await compareHashed(
+    password,
+    user.dataValues.password,
+  ); // bcrypt.compare
   if (!isAccordPassword) {
     const error = "패스워드가 일치하지 않습니다.";
     return res.status().json({
@@ -159,7 +177,7 @@ router.post("/out", (req, res) => {
 router
   .route("/reset")
   // POST, 이메일 검증
-  .post((req, res) => {
+  .post(async (req, res) => {
     const { email } = req.body;
 
     let status = false;
@@ -175,7 +193,7 @@ router
     }
 
     // 유저 검색
-    const user = null; // Users.findOne
+    const user = await getUserByEmail(email); // Users.findOne
 
     // 이메일 존재 여부 검증
     if (!user) {
@@ -192,12 +210,12 @@ router
       status,
       data: {
         email,
-        resetQuestion: "Where are you from?", // user.dataValues.resetQuestion
+        resetQuestion: user.dataValues.reset_question,
       },
     });
   })
   // PUT, 답변 검증 & 패스워드 변경
-  .put((req, res) => {
+  .put(async (req, res) => {
     const { email, newPassword, newPasswordConfirmation, resetAnswer } =
       req.body;
 
@@ -227,9 +245,10 @@ router
       });
     }
 
-    const user = true; // Users.findOne
+    // 유저 조회 - 패스워드 찾기 질답 검증
+    const user = await getUserByEmail(email);
 
-    const isCorrect = user.dataValues.resetAnswer === resetAnswer;
+    const isCorrect = resetAnswer === user.dataValues.reset_answer;
     if (!isCorrect) {
       const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
       return res.status().json({
@@ -239,6 +258,11 @@ router
     }
 
     // 유저의 패스워드 업데이트 Users.update
+    await updateUser(
+      user.dataValues.id,
+      "password",
+      await hashValue(newPassword),
+    );
 
     status = true;
 
@@ -248,7 +272,7 @@ router
   });
 
 // GET /user/log 라우터
-router.get("/log", (req, res) => {
+router.get("/log", async (req, res) => {
   const { id } = req.session;
   const { skip } = req.query;
 
@@ -263,36 +287,15 @@ router.get("/log", (req, res) => {
     });
   }
 
-  // 로그 검색 단위
-  const unit = 5;
-
-  // 로그 조회(findAll) - 로그인한 유저 아이디로 내림차순 검색, offset과 limit 옵션 이용
-  // order : [["id", "DESC"]]
-  // offeset:unit * parseInt(skip) // offset만큼 점프한 곳에서
-  // limit:unit // limit만큼 얻어옴
+  const logsInstance = await getPointLogsBySkip(id, "id", "DESC", skip);
+  const logs = logsInstance.map((inst) => inst.dataValues);
 
   status = true;
 
   return res.status(200).json({
     status,
     data: {
-      logs: [
-        {
-          createdAt: Date.now() - 2000,
-          comment: "최초 로그인",
-          amount: 5,
-        },
-        {
-          createdAt: Date.now() - 20000,
-          comment: "서비스 이용",
-          amount: -1,
-        },
-        {
-          createdAt: Date.now() - 200000,
-          comment: "최초 로그인",
-          amount: 5,
-        },
-      ],
+      logs,
     },
   });
 });
