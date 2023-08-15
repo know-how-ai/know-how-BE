@@ -20,7 +20,7 @@ class Users extends Model {
           allowNull: false,
         },
         password: {
-          type: DataTypes.STRING(16),
+          type: DataTypes.STRING(73),
           allowNull: false,
         },
         reset_question: {
@@ -32,9 +32,9 @@ class Users extends Model {
           allowNull: false,
         },
         last_logged_in: {
-          type: DataTypes.DATE,
+          type: DataTypes.DATEONLY,
           allowNull: false,
-          defaultValue: DataTypes.DATEONLY,
+          defaultValue: DataTypes.NOW,
         },
         point: {
           type: DataTypes.INTEGER.UNSIGNED,
