@@ -1,20 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const { 
-  getUserByEmail, 
-  createNewUser, 
+const {
+  getUserByEmail,
+  createNewUser,
   updateUserById,
   updateUserByFirstLogin,
-} =
-  require("../controllers/user");
+} = require("../controllers/user");
 const {
-  createNewPointByfirstLogin,
+  createNewPointLogByFirstLogin,
   getPointLogsBySkip,
 } = require("../controllers/point");
 const { getToday } = require("../libs/date");
 const { hashValue, compareHashed } = require("../libs/hash");
 
-// user/new 라우터
+//  /user/new 라우터
 router.post("/new", async (req, res) => {
   const {
     email,
@@ -44,7 +43,7 @@ router.post("/new", async (req, res) => {
     });
   }
 
-  // 패스워드와 패스워드 확인 일치 여부 검증
+  // 패스워드와 패스워드 확인란 일치 여부 검증
   const isAccord = password === passwordConfirmation;
   if (!isAccord) {
     const error = "패스워드 확인란이 일치하지 않습니다.";
@@ -57,13 +56,14 @@ router.post("/new", async (req, res) => {
   // 요청 이메일로 이미 가입된 사용자 있는지 검증
   const user = await getUserByEmail(email); // Users.findOne
   if (user) {
-    const error = "이미 가입한 이메일입니다.";
+    const error = "이미 가입된 이메일입니다.";
     return res.status().json({
       status,
       error,
     });
   }
 
+  // 패스워드 해싱 && 솔팅 - bcrypt
   // 데이터베이스에 새 row 생성 - Users.create
   const newUser = await createNewUser({
     email,
@@ -77,10 +77,10 @@ router.post("/new", async (req, res) => {
     id: newUser.dataValues.id,
     username,
     point: newUser.dataValues.point,
-  }
+  };
 
   // 최초 로그인으로 인한 포인트 지급 로그 생성
-  const newUserPointLog = await createNewPointByfirstLogin(
+  const newUserPointLog = await createNewPointLogByFirstLogin(
     newUser.dataValues.id,
   );
 
@@ -102,7 +102,7 @@ router.post("/new", async (req, res) => {
   });
 });
 
-// user/in 라우터
+//  /user/in 라우터
 router.post("/in", async (req, res) => {
   const { email, password } = req.body;
 
@@ -124,7 +124,7 @@ router.post("/in", async (req, res) => {
 
   // 해당 이메일로 가입한 사용자가 있는지 검증
   if (!user) {
-    const error = "해당 이메일로 가입한 사용자가 존재하지 않습니다.";
+    const error = "해당 이메일로 가입된 사용자가 존재하지 않습니다.";
     return res.status().json({
       status,
       error,
@@ -144,12 +144,12 @@ router.post("/in", async (req, res) => {
     });
   }
 
-  // 오늘의 최초 로그인 여부 검증 맟 이에 따른 포인트 지급 결정
+  // 오늘의 최초 로그인 여부 검증 및 이에 따른 포인트 지급 결정
   /**
    * 1. 유저를 찾는다.
    * 2. 유저의 last_logged_in 필드를 현재 Date와 비교
    * 3. 일자가 다른 경우, 포인트 지급 및 새 PointLogs row를 생성.
-   * >>> 일자가 같고 다름을 검증하는 함수가 필요
+   * >>> 일자의 같고 다름을 검증하는 함수가 필요.
    */
 
   // TO-DO : 로그인하는 유저의 updated_at 필드의 갱신 여부 확인 필요
@@ -173,8 +173,10 @@ router.post("/in", async (req, res) => {
     });
   }
 
-  const newLog = await createNewPointByfirstLogin(user.dataValues.id);
-  const savedUser = await updateUserByFirstLogin(
+  // 지급 로그 - 포인트로그
+  const newLog = await createNewPointLogByFirstLogin(user.dataValues.id);
+  // 실제 지급 - 유저
+  await updateUserByFirstLogin(
     user.dataValues.id,
     user.dataValues.point,
     newLog.dataValues.amount,
@@ -188,7 +190,7 @@ router.post("/in", async (req, res) => {
   });
 });
 
-// user/out 라우터
+//  /user/out 라우터
 router.post("/out", (req, res) => {
   const { id } = req.session;
 
@@ -212,10 +214,10 @@ router.post("/out", (req, res) => {
   });
 });
 
-// user/reset 라우터
+//  /user/reset 라우터
 router
   .route("/reset")
-  // POST, 이메일 검증
+  // POST: 이메일 검증
   .post(async (req, res) => {
     const { email } = req.body;
 
@@ -253,7 +255,7 @@ router
       },
     });
   })
-  // PUT, 답변 검증 & 패스워드 변경
+  // PUT: 패스워드 초기화 답변 검증 && 패스워드 변경
   .put(async (req, res) => {
     const { email, newPassword, newPasswordConfirmation, resetAnswer } =
       req.body;
@@ -274,7 +276,7 @@ router
       });
     }
 
-    // 새 패스워드 & 새 패스워드 확인란 여부 일치 검증
+    // 새 패스워드 & 새 패스워드 확인란 일치 여부 검증
     const isAccord = newPassword === newPasswordConfirmation;
     if (!isAccord) {
       const error = "패스워드 확인란이 일치하지 않습니다.";
@@ -310,7 +312,7 @@ router
     });
   });
 
-// GET /user/log 라우터
+//  /user/log 라우터
 router.get("/log", async (req, res) => {
   const { id } = req.session;
   const { skip } = req.query;
