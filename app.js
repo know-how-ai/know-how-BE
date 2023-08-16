@@ -50,6 +50,7 @@ const corsMiddleware = cors({
 
 const { kogptRouter, userRouter } = require("./routes");
 
+app.use(corsMiddleware);
 app.use("/user", userRouter);
 app.use("/kogpt", kogptRouter);
 
