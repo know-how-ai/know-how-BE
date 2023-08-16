@@ -1,14 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { getUserByEmail, createNewUser, updateUserById } =
-  require("../controllers/user").default;
+const { 
+  getUserByEmail, 
+  createNewUser, 
+  updateUserById,
+  updateUserByFirstLogin,
+} =
+  require("../controllers/user");
 const {
   createNewPointByfirstLogin,
   getPointLogsBySkip,
 } = require("../controllers/point");
 const { getToday } = require("../libs/date");
 const { hashValue, compareHashed } = require("../libs/hash");
-const { updateUserByFirstLogin } = require("../controllers/user");
 
 // user/new 라우터
 router.post("/new", async (req, res) => {
@@ -23,7 +27,7 @@ router.post("/new", async (req, res) => {
 
   let status = false;
 
-  // 반 문자열인 필드가 있는지 검증
+  // 빈 문자열인 필드가 있는지 검증
   const isEmpty = !(
     email &&
     password &&
@@ -69,6 +73,12 @@ router.post("/new", async (req, res) => {
     reset_answer: resetAnswer,
   });
 
+  const data = {
+    id: newUser.dataValues.id,
+    username,
+    point: newUser.dataValues.point,
+  }
+
   // 최초 로그인으로 인한 포인트 지급 로그 생성
   const newUserPointLog = await createNewPointByfirstLogin(
     newUser.dataValues.id,
@@ -81,17 +91,14 @@ router.post("/new", async (req, res) => {
     newUserPointLog.dataValues.amount,
   );
 
+  data.point += newUserPointLog.dataValues.amount;
   status = true;
 
   // 로그인 처리 - 세션 세이브
 
   return res.status(200).json({
     status,
-    data: {
-      id: newUser.dataValues.id,
-      username,
-      point: newUserPointLog.dataValues.amount,
-    },
+    data,
   });
 });
 
@@ -147,15 +154,13 @@ router.post("/in", async (req, res) => {
 
   // TO-DO : 로그인하는 유저의 updated_at 필드의 갱신 여부 확인 필요
   // 세션 등록
-  // req.session.save()
 
+  status = true;
   const data = {
     id: user.dataValues.id,
     username: user.dataValues.username,
     point: user.dataValues.point,
   };
-
-  status = true;
 
   const today = getToday();
   const isAlreadyLoggedInToday = today === user.dataValues.last_logged_in;
