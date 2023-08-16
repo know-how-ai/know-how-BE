@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-// user/coverletter 라우터
+//  /user/coverletter 라우터
 router.post("/coverletter", (req, res) => {
   const { coverletter, job } = req.body;
   const { id } = req.session;
@@ -22,7 +22,7 @@ router.post("/coverletter", (req, res) => {
     coverletter +
     "이 자기소개서에서 잘한 점 3가지와 못한 점 3가지를 찾고, 총평을 작성해주세요.";
 
-  // kogpt api 호출
+  // kogpt API 호출
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
@@ -38,7 +38,7 @@ router.post("/coverletter", (req, res) => {
   });
 });
 
-// user/job 라우터
+//  /user/job 라우터
 router.post("/job", (req, res) => {
   const { job, domain, project, description, skill, feature } = req.body;
   const { id } = req.session;
@@ -67,7 +67,7 @@ router.post("/job", (req, res) => {
     `${skill} 등을 이용하여 진행했으며, ${feature}를 이뤄냈습니다.` +
     `면접 전형에서 받을 가능성이 높은 질문에 5개를 작성해주세요.`;
 
-  // kogpt api 호출
+  // kogpt API 호출
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
@@ -81,7 +81,7 @@ router.post("/job", (req, res) => {
   });
 });
 
-// user/interview 라우터
+//  /user/interview 라우터
 router.post("/interview", (req, res) => {
   const { personalities } = req.body;
   const { id } = req.session;
@@ -98,10 +98,10 @@ router.post("/interview", (req, res) => {
   }
 
   const prompt =
-    `${personalities}의 성향을 가진 사람에게` +
+    `${personalities}의 성향을 가진 사람에게 ` +
     "어울리는 직업 5가지를 각각 해당 직업에서 중요한 성향과 함께 추천해주세요.";
 
-  // kogpt api 호출
+  // kogpt API 호출
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
