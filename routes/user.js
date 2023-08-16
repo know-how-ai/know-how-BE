@@ -1,16 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const { getUserByEmail, createNewUser, updateUserById } =
+  require("../controllers/user").default;
 const {
-  getUserByEmail,
-  createNewUser,
-  hashValue,
-  compareHashed,
-  updateUser,
-} = require("../controllers/user");
-const {
-  earnPointByfirstLogin,
+  createNewPointByfirstLogin,
   getPointLogsBySkip,
 } = require("../controllers/point");
+const { getToday } = require("../libs/date");
+const { hashValue, compareHashed } = require("../libs/hash");
+const { updateUserByFirstLogin } = require("../controllers/user");
 
 // user/new 라우터
 router.post("/new", async (req, res) => {
@@ -71,7 +69,17 @@ router.post("/new", async (req, res) => {
     reset_answer: resetAnswer,
   });
 
-  const newUserPointLog = await earnPointByfirstLogin(newUser.dataValues.id);
+  // 최초 로그인으로 인한 포인트 지급 로그 생성
+  const newUserPointLog = await createNewPointByfirstLogin(
+    newUser.dataValues.id,
+  );
+
+  // 최초 로그인으로 인한 포인트 지급
+  await updateUserByFirstLogin(
+    newUser.dataValues.id,
+    newUser.dataValues.point,
+    newUserPointLog.dataValues.amount,
+  );
 
   status = true;
 
@@ -92,6 +100,8 @@ router.post("/in", async (req, res) => {
   const { email, password } = req.body;
 
   let status = false;
+
+  // 세션 쿠키의 존재 여부 검증
 
   const isEmpty = !(email && password);
   if (isEmpty) {
@@ -135,17 +145,41 @@ router.post("/in", async (req, res) => {
    * >>> 일자가 같고 다름을 검증하는 함수가 필요
    */
 
+  // TO-DO : 로그인하는 유저의 updated_at 필드의 갱신 여부 확인 필요
   // 세션 등록
   // req.session.save()
+
+  const data = {
+    id: user.dataValues.id,
+    username: user.dataValues.username,
+    point: user.dataValues.point,
+  };
+
   status = true;
+
+  const today = getToday();
+  const isAlreadyLoggedInToday = today === user.dataValues.last_logged_in;
+
+  // 이미 오늘 로그인한 기록이 있는 경우 - 최초 로그인 포인트 지급 X
+  if (isAlreadyLoggedInToday) {
+    return res.status(200).json({
+      status,
+      data,
+    });
+  }
+
+  const newLog = await createNewPointByfirstLogin(user.dataValues.id);
+  const savedUser = await updateUserByFirstLogin(
+    user.dataValues.id,
+    user.dataValues.point,
+    newLog.dataValues.amount,
+  );
+
+  data.point += newLog.dataValues.amount;
 
   return res.status(200).json({
     status,
-    data: {
-      id: 1, // user.dataValues.id
-      username: "hi~", // user.dataValues.username
-      point: 5, // user.dataValues.point
-    },
+    data,
   });
 });
 
@@ -258,7 +292,7 @@ router
     }
 
     // 유저의 패스워드 업데이트 Users.update
-    await updateUser(
+    await updateUserById(
       user.dataValues.id,
       "password",
       await hashValue(newPassword),

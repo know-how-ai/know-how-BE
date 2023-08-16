@@ -7,11 +7,11 @@ const createNewPointLog = async (user_id, amount, comment) => {
   return result;
 };
 
-const earnPointByfirstLogin = (user_id) => {
+const createNewPointByfirstLogin = async (user_id) => {
   const point = 5;
   const comment = "최초 로그인으로 인한 포인트 지급";
 
-  return createNewPointLog(user_id, point, comment);
+  return await createNewPointLog(user_id, point, comment);
 };
 
 const getPointLogsBySkip = async (user_id, orderColumn, orderStyle, skip) => {
@@ -32,6 +32,6 @@ const getPointLogsBySkip = async (user_id, orderColumn, orderStyle, skip) => {
 
 module.exports = {
   createNewPointLog,
-  earnPointByfirstLogin,
+  createNewPointByfirstLogin,
   getPointLogsBySkip,
 };

@@ -17,14 +17,21 @@ const getUserByEmail = async (email) => {
   return found;
 };
 
-const updateUser = async (id, column, value) => {
+const updateUserById = async (id, column, value) => {
   const result = await Users.update({ [column]: value }, { where: { id } });
 
   return result;
 };
 
+const updateUserByFirstLogin = async (id, previousPoint, earning) => {
+  const today = new Date();
 
+  const values = {
+    point: previousPoint + earning,
+    last_logged_in: today,
+  };
 
+  const result = await Users.update(values, { where: { id } });
 
   return result;
 };
@@ -32,5 +39,6 @@ const updateUser = async (id, column, value) => {
 module.exports = {
   getUserByEmail,
   createNewUser,
-  updateUser,
+  updateUserById,
+  updateUserByFirstLogin,
 };
