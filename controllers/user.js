@@ -1,4 +1,3 @@
-const bcrypt = require("bcrypt");
 const Users = require("../models/users");
 
 // 패스워드 해싱 && 솔팅 - bcrypt
@@ -24,23 +23,14 @@ const updateUser = async (id, column, value) => {
   return result;
 };
 
-const hashValue = async (password, saltRounds = 9) => {
-  const salt = await bcrypt.genSalt(saltRounds);
-  const hashed = await bcrypt.hash(password, salt);
 
-  return hashed;
-};
 
-const compareHashed = async (unhashed, hashed) => {
-  const result = await bcrypt.compare(unhashed, hashed);
 
   return result;
 };
 
 module.exports = {
   getUserByEmail,
-  hashValue,
   createNewUser,
-  compareHashed,
   updateUser,
 };
