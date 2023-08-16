@@ -1,9 +1,9 @@
 const getToday = () => {
   const today = new Date();
   const todayObject = {
-    todayYear: string(today.getFullYear)(),
-    todayMonth: string(today.getMonth)(),
-    todayDate: string(today.getDate)(),
+    todayYear: String(today.getFullYear()),
+    todayMonth: String(today.getMonth()),
+    todayDate: String(today.getDate()),
   };
 
   if (todayObject.todayDate.length === 1) {
