@@ -1,20 +1,25 @@
 const PointLogs = require("../models/pointLogs");
 
 // 최초 로그인으로 인한 포인트 지급 로그 생성 - PointLogs.create
-const createNewPointLog = async (user_id, amount, comment) => {
+const createPointLog = async (user_id, amount, comment) => {
   const result = await PointLogs.create({ user_id, amount, comment });
 
   return result;
 };
 
-const createNewPointLogByFirstLogin = async (user_id) => {
+const createPointLogByFirstLogin = async (user_id) => {
   const point = 5;
   const comment = "최초 로그인으로 인한 포인트 지급";
 
-  return await createNewPointLog(user_id, point, comment);
+  return await createPointLog(user_id, point, comment);
 };
 
-const getPointLogsBySkip = async (user_id, orderColumn, orderStyle, skip) => {
+const selectPointLogsBySkip = async (
+  user_id,
+  orderColumn,
+  orderStyle,
+  skip,
+) => {
   const unit = 5; // 로그 검색 단위
   const offset = unit * parseInt(skip);
 
@@ -31,7 +36,7 @@ const getPointLogsBySkip = async (user_id, orderColumn, orderStyle, skip) => {
 };
 
 module.exports = {
-  createNewPointLog,
-  createNewPointLogByFirstLogin,
-  getPointLogsBySkip,
+  createPointLog,
+  createPointLogByFirstLogin,
+  selectPointLogsBySkip,
 };

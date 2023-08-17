@@ -1,16 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const {
-  getUserByEmail,
-  createNewUser,
+  selectUserByEmail,
+  createUser,
   updateUserById,
   updateUserByFirstLogin,
 } = require("../controllers/user");
 const {
-  createNewPointLogByFirstLogin,
-  getPointLogsBySkip,
+  createPointLogByFirstLogin,
+  selectPointLogsBySkip,
 } = require("../controllers/point");
-const { getToday } = require("../libs/date");
+const { getTodayDate } = require("../libs/date");
 const { hashValue, compareHashed } = require("../libs/hash");
 
 //  /user/new 라우터
@@ -54,7 +54,7 @@ router.post("/new", async (req, res) => {
   }
 
   // 요청 이메일로 이미 가입된 사용자 있는지 검증
-  const user = await getUserByEmail(email); // Users.findOne
+  const user = await selectUserByEmail(email); // Users.findOne
   if (user) {
     const error = "이미 가입된 이메일입니다.";
     return res.status().json({
@@ -65,7 +65,7 @@ router.post("/new", async (req, res) => {
 
   // 패스워드 해싱 && 솔팅 - bcrypt
   // 데이터베이스에 새 row 생성 - Users.create
-  const newUser = await createNewUser({
+  const newUser = await createUser({
     email,
     password: await hashValue(password),
     username,
@@ -80,7 +80,7 @@ router.post("/new", async (req, res) => {
   };
 
   // 최초 로그인으로 인한 포인트 지급 로그 생성
-  const newUserPointLog = await createNewPointLogByFirstLogin(
+  const newUserPointLog = await createPointLogByFirstLogin(
     newUser.dataValues.id,
   );
 
@@ -120,7 +120,7 @@ router.post("/in", async (req, res) => {
   }
 
   // 유저 검색 - Users.findOne
-  const user = await getUserByEmail(email);
+  const user = await selectUserByEmail(email);
 
   // 해당 이메일로 가입한 사용자가 있는지 검증
   if (!user) {
@@ -162,27 +162,27 @@ router.post("/in", async (req, res) => {
     point: user.dataValues.point,
   };
 
-  const today = getToday();
-  const isAlreadyLoggedInToday = today === user.dataValues.last_logged_in;
+  const today = getTodayDate();
+  const isFirstLoggedInToday = today !== user.dataValues.last_logged_in;
 
-  // 이미 오늘 로그인한 기록이 있는 경우 - 최초 로그인 포인트 지급 X
-  if (isAlreadyLoggedInToday) {
-    return res.status(200).json({
-      status,
-      data,
-    });
+  // 오늘의 최초 로그인 - 최초 로그인 포인트 지급
+  if (isFirstLoggedInToday) {
+    // 트랜잭션으로 DB 작업 단위를 묶을 수 있지 않을까?
+    const newLog = await createPointLogByFirstLogin(user.dataValues.id);
+    await updateUserByFirstLogin(
+      user.dataValues.id,
+      user.dataValues.point,
+      newLog.dataValues.amount,
+    );
+
+    data.point += newLog.dataValues.amount;
   }
 
-  // 지급 로그 - 포인트로그
-  const newLog = await createNewPointLogByFirstLogin(user.dataValues.id);
-  // 실제 지급 - 유저
-  await updateUserByFirstLogin(
-    user.dataValues.id,
-    user.dataValues.point,
-    newLog.dataValues.amount,
-  );
+  req.session.user = data;
+  req.session.loggedIn = true;
+  // await req.session.save();
 
-  data.point += newLog.dataValues.amount;
+  status = true;
 
   return res.status(200).json({
     status,
@@ -234,7 +234,7 @@ router
     }
 
     // 유저 검색
-    const user = await getUserByEmail(email); // Users.findOne
+    const user = await selectUserByEmail(email);
 
     // 이메일 존재 여부 검증
     if (!user) {
@@ -287,7 +287,7 @@ router
     }
 
     // 유저 조회 - 패스워드 찾기 질답 검증
-    const user = await getUserByEmail(email);
+    const user = await selectUserByEmail(email);
 
     const isCorrect = resetAnswer === user.dataValues.reset_answer;
     if (!isCorrect) {
@@ -328,8 +328,14 @@ router.get("/log", async (req, res) => {
     });
   }
 
-  const logsInstance = await getPointLogsBySkip(id, "id", "DESC", skip);
-  const logs = logsInstance.map((inst) => inst.dataValues);
+  // try ~ catch || 에러처리 미들웨어 필요
+  const logsIntstance = await selectPointLogsBySkip(
+    req.sessionStore[req.sessionID].user.id, // 변경 필요
+    "id",
+    "DESC",
+    skip,
+  );
+  const logs = logsIntstance.map((inst) => inst.dataValues);
 
   status = true;
 

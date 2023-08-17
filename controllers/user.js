@@ -1,13 +1,13 @@
 const Users = require("../models/users");
 
 // 패스워드 해싱 && 솔팅 - bcrypt
-const createNewUser = async (values) => {
+const createUser = async (values) => {
   const result = await Users.create(values);
 
   return result;
 };
 
-const getUserByEmail = async (email) => {
+const selectUserByEmail = async (email) => {
   const found = await Users.findOne({
     where: {
       email,
@@ -37,8 +37,8 @@ const updateUserByFirstLogin = async (id, previousPoint, earning) => {
 };
 
 module.exports = {
-  getUserByEmail,
-  createNewUser,
+  selectUserByEmail,
+  createUser,
   updateUserById,
   updateUserByFirstLogin,
 };
