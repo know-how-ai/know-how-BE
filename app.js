@@ -42,6 +42,19 @@ app.use(
   }),
 );
 
+// for check current sessions
+app.use((req, res, next) => {
+  console.log("✅ cookies: ", req.cookies);
+  console.log("✅ signedCookies: ", req.signedCookies);
+  console.log("✅ session: ", req.session);
+  console.log("✅ sessionID: ", req.sessionID);
+
+  req.sessionStore.all((error, sessions) => {
+    console.log("✅ sessionStore: ", sessions);
+    next();
+  });
+});
+
 // for resolve 'cors' issue
 const corsMiddleware = cors({
   origin: "http://localhost:3000",

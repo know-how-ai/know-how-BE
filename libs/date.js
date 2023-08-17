@@ -1,4 +1,4 @@
-const getToday = () => {
+const getTodayDate = () => {
   const today = new Date();
   const todayObject = {
     todayYear: String(today.getFullYear()),
@@ -18,5 +18,5 @@ const getToday = () => {
 };
 
 module.exports = {
-  getToday,
+  getTodayDate,
 };
