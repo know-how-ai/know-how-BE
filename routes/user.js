@@ -38,8 +38,8 @@ router.post("/new", isNotPrivate, async (req, res, next) => {
       email,
       password: await hashValue(password),
       username,
-      reset_question,
-      reset_answer,
+      reset_question: resetQuestion,
+      reset_answer: resetAnswer,
     });
 
     const data = {
@@ -56,10 +56,10 @@ router.post("/new", isNotPrivate, async (req, res, next) => {
     await updateUserByFirstLogin(
       newUser.dataValues.id,
       newUser.dataValues.point,
-      newUser.dataValues.amount,
+      newUserPointLog.dataValues.amount,
     );
 
-    data.point += newUserPointLog.amount;
+    data.point += newUserPointLog.dataValues.amount;
 
     // 검증 로직 완료, 로그인 로직 수행
     return req.login(newUser, (loginError) => {
@@ -196,8 +196,8 @@ router
     try {
       // 유저 조회 - 패스워드 찾기 질답 검증
       const user = await selectUserByEmail(email);
-
       const isCorrect = resetAnswer === user.dataValues.reset_answer;
+      
       if (!isCorrect) {
         const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
         // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
@@ -214,10 +214,8 @@ router
         await hashValue(newPassword),
       );
 
-      status = true;
-
       return res.status(200).json({
-        status,
+        status: true,
       });
     } catch (error) {
       next(error);
@@ -228,6 +226,7 @@ router
 router.get("/log", isPrivate, async (req, res, next) => {
   const { user } = req;
   const { skip } = req.query;
+  
   try {
     const logsIntstance = await selectPointLogsBySkip(
       user.id,
@@ -235,6 +234,7 @@ router.get("/log", isPrivate, async (req, res, next) => {
       "DESC",
       skip,
     );
+    
     const logs = logsIntstance.map((inst) => inst.dataValues);
 
     return res.status(200).json({
