@@ -13,6 +13,7 @@ const {
 const { getTodayDate } = require("../libs/date");
 const { hashValue, compareHashed } = require("../libs/hash");
 const { isPrivate, isNotPrivate } = require("../middlewares/private");
+const passport = require("passport");
 
 //  /user/new 라우터
 router.post("/new", isNotPrivate, async (req, res, next) => {
@@ -249,8 +250,11 @@ router.get("/log", isPrivate, async (req, res, next) => {
       "DESC",
       skip,
     );
-    
-    const logs = logsIntstance.map((inst) => inst.dataValues);
+
+    const logs = logsIntstance.map((inst) => ({
+      ...inst.dataValues,
+      created_at: new Date(inst.created_at).getTime(),
+    }));
 
     return res.status(200).json({
       status: true,
