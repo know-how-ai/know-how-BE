@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
+const { sequelize } = require("./models");
 
 // for use env variables
 dotenv.config();
@@ -43,17 +44,17 @@ app.use(
 );
 
 // for check current sessions
-app.use((req, res, next) => {
-  console.log("✅ cookies: ", req.cookies);
-  console.log("✅ signedCookies: ", req.signedCookies);
-  console.log("✅ session: ", req.session);
-  console.log("✅ sessionID: ", req.sessionID);
+// app.use((req, res, next) => {
+//   console.log("✅ cookies: ", req.cookies);
+//   console.log("✅ signedCookies: ", req.signedCookies);
+//   console.log("✅ session: ", req.session);
+//   console.log("✅ sessionID: ", req.sessionID);
 
-  req.sessionStore.all((error, sessions) => {
-    console.log("✅ sessionStore: ", sessions);
-    next();
-  });
-});
+//   req.sessionStore.all((error, sessions) => {
+//     console.log("✅ sessionStore: ", sessions);
+//     next();
+//   });
+// });
 
 // for resolve 'cors' issue
 const corsMiddleware = cors({
@@ -84,9 +85,7 @@ app.use((err, req, res, next) => {
 });
 
 // connect to database && create tables with models
-const db = require("./models");
-
-db.sequelize
+sequelize
   .sync({ alter: true })
   .then((fulfilled) => {
     console.log("DB 연결 성공. ✅");
