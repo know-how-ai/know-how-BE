@@ -1,24 +1,16 @@
 const express = require("express");
+const { isPrivate } = require("../middlewares/private");
 const router = express.Router();
 
 //  /user/coverletter 라우터
-router.post("/coverletter", (req, res) => {
-  const { coverletter, job } = req.body;
-  const { id } = req.session;
-
-  let status = false;
-
-  const isEmpty = !(coverletter && job);
-  if (isEmpty) {
-    const error = "적절하지 않은 폼 값입니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
+router.post("/coverletter", isPrivate, (req, res) => {
+  const {
+    user,
+    body: { coverletter, job },
+  } = req;
 
   const prompt =
-    `${job}에 지원하고자 자기소개서를 다음과 같이 작성했습니다.` +
+    `${job}에 지원하고자 자기소개서를 다음과 같이 작성했습니다. ` +
     coverletter +
     "이 자기소개서에서 잘한 점 3가지와 못한 점 3가지를 찾고, 총평을 작성해주세요.";
 
@@ -26,40 +18,22 @@ router.post("/coverletter", (req, res) => {
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
-  status = true;
-
   return res.status(200).json({
-    status,
+    status: true,
     data: {
-      good: ["1. ...", "2. ...", "3. ..."],
-      bad: ["1. ...", "2. ...", "3. ..."],
-      overall: "So, ...",
+      good: ["1. ... ", "2. ... ", "3. ... "],
+      bad: ["1. ... ", "2. ... ", "3. ... "],
+      overall: "So, ... ",
     },
   });
 });
 
 //  /user/job 라우터
-router.post("/job", (req, res) => {
-  const { job, domain, project, description, skill, feature } = req.body;
-  const { id } = req.session;
-
-  let status = false;
-
-  const isEmpty = !(
-    job &&
-    domain &&
-    project &&
-    description &&
-    skill &&
-    feature
-  );
-  if (isEmpty) {
-    const error = "적절하지 않은 폼 값입니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
+router.post("/job", isPrivate, (req, res) => {
+  const {
+    user,
+    body: { job, domain, project, description, skill, feature },
+  } = req;
 
   const prompt =
     `${domain} 업계의 ${job}으로 취업하려고 합니다.` +
@@ -71,31 +45,20 @@ router.post("/job", (req, res) => {
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
-  status = true;
-
   return res.status(200).json({
-    status,
+    status: true,
     data: {
-      questions: ["1. ...", "2. ...", "3. ...", "4. ...", "5. ..."],
+      questions: ["1. ... ", "2. ... ", "3. ... ", "4. ... ", "5. ..."],
     },
   });
 });
 
 //  /user/interview 라우터
-router.post("/interview", (req, res) => {
-  const { personalities } = req.body;
-  const { id } = req.session;
-
-  let status = false;
-
-  const isEmpty = !personalities.length;
-  if (isEmpty) {
-    const error = "적절하지 않은 폼 값입니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
+router.post("/interview", isPrivate, (req, res) => {
+  const {
+    user,
+    body: { personalities },
+  } = req;
 
   const prompt =
     `${personalities}의 성향을 가진 사람에게 ` +
@@ -105,12 +68,10 @@ router.post("/interview", (req, res) => {
   // 유저 포인트 삭감
   // 포인트 로그 기록
 
-  status = true;
-
   return res.status(200).json({
-    status,
+    status: true,
     data: {
-      recommendations: ["1. ...", "2. ...", "3. ...", "4. ...", "5. ..."],
+      recommendations: ["1. ... ", "2. ... ", "3. ... ", "4. ... ", "5. ..."],
     },
   });
 });
