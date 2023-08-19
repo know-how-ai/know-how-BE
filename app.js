@@ -5,6 +5,8 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
+const passport = require("passport");
+const passportConfig = require("./passport/index");
 const { sequelize } = require("./models");
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -12,6 +14,7 @@ const errorHandler = require("./middlewares/errorHandler");
 dotenv.config();
 
 const app = express();
+passportConfig(); // configure passport for auth
 const PORT = "port";
 const PORT_NUMBER = process.env.PORT_NUMBER || 3000;
 
@@ -45,6 +48,9 @@ app.use(
     name: "express-session-cookie",
   }),
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // for check current sessions
 // app.use((req, res, next) => {
