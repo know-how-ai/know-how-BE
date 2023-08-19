@@ -2,7 +2,7 @@ const getTodayDate = () => {
   const today = new Date();
   const todayObject = {
     todayYear: String(today.getFullYear()),
-    todayMonth: String(today.getMonth()),
+    todayMonth: String(today.getMonth() + 1),
     todayDate: String(today.getDate()),
   };
 
@@ -14,7 +14,7 @@ const getTodayDate = () => {
     todayObject.todayMonth = "0" + todayObject.todayMonth;
   }
 
-  return todayObject.todayYear + todayObject.todayMonth + todayObject.todayDate;
+  return `${todayObject.todayYear}-${todayObject.todayMonth}-${todayObject.todayDate}`;
 };
 
 module.exports = {

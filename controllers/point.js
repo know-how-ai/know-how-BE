@@ -21,7 +21,7 @@ const selectPointLogsBySkip = async (
   skip,
 ) => {
   const unit = 5; // 로그 검색 단위
-  const offset = unit * parseInt(skip);
+  const offset = parseInt(skip);
 
   const results = await PointLogs.findAll({
     where: {
@@ -30,6 +30,7 @@ const selectPointLogsBySkip = async (
     order: [[orderColumn, orderStyle.toUpperCase()]],
     limit: unit, // getting amount of logs
     offset, // skipping parts
+    attributes: ["amount", "comment", "created_at"],
   });
 
   return results;

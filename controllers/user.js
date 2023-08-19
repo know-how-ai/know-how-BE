@@ -17,6 +17,12 @@ const selectUserByEmail = async (email) => {
   return found;
 };
 
+const selectUserById = async (id) => {
+  const found = await Users.findByPk(id);
+
+  return found;
+};
+
 const updateUserById = async (id, column, value) => {
   const result = await Users.update({ [column]: value }, { where: { id } });
 
@@ -41,4 +47,5 @@ module.exports = {
   createUser,
   updateUserById,
   updateUserByFirstLogin,
+  selectUserById,
 };

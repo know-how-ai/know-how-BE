@@ -5,11 +5,16 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
+const passport = require("passport");
+const passportConfig = require("./passport/index");
+const { sequelize } = require("./models");
+const { errorHandler } = require("./middlewares/errorHandler");
 
 // for use env variables
 dotenv.config();
 
 const app = express();
+passportConfig(); // configure passport for auth
 const PORT = "port";
 const PORT_NUMBER = process.env.PORT_NUMBER || 3000;
 
@@ -37,23 +42,28 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: false,
+      signed: true,
+      maxAge: 24 * 60 * 60, // a day
     },
-    name: "session-cookie",
+    name: "express-session-cookie",
   }),
 );
 
-// for check current sessions
-app.use((req, res, next) => {
-  console.log("✅ cookies: ", req.cookies);
-  console.log("✅ signedCookies: ", req.signedCookies);
-  console.log("✅ session: ", req.session);
-  console.log("✅ sessionID: ", req.sessionID);
+app.use(passport.initialize());
+app.use(passport.session());
 
-  req.sessionStore.all((error, sessions) => {
-    console.log("✅ sessionStore: ", sessions);
-    next();
-  });
-});
+// for check current sessions
+// app.use((req, res, next) => {
+//   console.log("✅ cookies: ", req.cookies);
+//   console.log("✅ signedCookies: ", req.signedCookies);
+//   console.log("✅ session: ", req.session);
+//   console.log("✅ sessionID: ", req.sessionID);
+
+//   req.sessionStore.all((error, sessions) => {
+//     console.log("✅ sessionStore: ", sessions);
+//     next();
+//   });
+// });
 
 // for resolve 'cors' issue
 const corsMiddleware = cors({
@@ -76,17 +86,10 @@ app.get("/", corsMiddleware, (req, res) => {
 });
 
 // Error handling
-app.use((err, req, res, next) => {
-  return res.status(err.status || 500).json({
-    message: err.message,
-    status: err.status || 500,
-  });
-});
+app.use(errorHandler);
 
 // connect to database && create tables with models
-const db = require("./models");
-
-db.sequelize
+sequelize
   .sync({ alter: true })
   .then((fulfilled) => {
     console.log("DB 연결 성공. ✅");
