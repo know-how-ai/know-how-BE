@@ -8,7 +8,7 @@ const cors = require("cors");
 const passport = require("passport");
 const passportConfig = require("./passport/index");
 const { sequelize } = require("./models");
-const errorHandler = require("./middlewares/errorHandler");
+const { errorHandler } = require("./middlewares/errorHandler");
 
 // for use env variables
 dotenv.config();
