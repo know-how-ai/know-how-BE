@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
 const { sequelize } = require("./models");
+const errorHandler = require("./middlewares/errorHandler");
 
 // for use env variables
 dotenv.config();
@@ -38,8 +39,10 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: false,
+      signed: true,
+      maxAge: 24 * 60 * 60, // a day
     },
-    name: "session-cookie",
+    name: "express-session-cookie",
   }),
 );
 
@@ -77,12 +80,7 @@ app.get("/", corsMiddleware, (req, res) => {
 });
 
 // Error handling
-app.use((err, req, res, next) => {
-  return res.status(err.status || 500).json({
-    message: err.message,
-    status: err.status || 500,
-  });
-});
+app.use(errorHandler);
 
 // connect to database && create tables with models
 sequelize
