@@ -12,205 +12,149 @@ const {
 } = require("../controllers/point");
 const { getTodayDate } = require("../libs/date");
 const { hashValue, compareHashed } = require("../libs/hash");
+const { isNotPrivate, isPrivate } = require("../middlewares/private");
 
 //  /user/new 라우터
-router.post("/new", async (req, res) => {
-  const {
-    email,
-    password,
-    passwordConfirmation,
-    username,
-    resetQuestion,
-    resetAnswer,
-  } = req.body;
+router.post("/new", isNotPrivate, async (req, res, next) => {
+  const { email, password, username, resetQuestion, resetAnswer } = req.body;
 
-  let status = false;
+  passport.authenticate("local", async (isError, user, error) => {
+    if (isError) {
+      return next(error);
+    }
 
-  // 빈 문자열인 필드가 있는지 검증
-  const isEmpty = !(
-    email &&
-    password &&
-    passwordConfirmation &&
-    username &&
-    resetQuestion &&
-    resetAnswer
-  );
-  if (isEmpty) {
-    const error = "폼 값이 부적절합니다.";
-    return res.status().json({
-      status,
-      error,
+    // 요청 이메일로 이미 가입된 사용자 있는지 검증
+    if (user) {
+      const error = "이미 가입된 이메일입니다.";
+      // 409 : Conflict, 요청-서버의 상태 간 충돌
+      return res.status(409).json({
+        status: false,
+        error,
+      });
+    }
+
+    // 신규 유저 생성
+    const newUser = await createUser({
+      email,
+      password: await hashValue(password),
+      username,
+      reset_question: resetQuestion,
+      reset_answer: resetAnswer,
     });
-  }
 
-  // 패스워드와 패스워드 확인란 일치 여부 검증
-  const isAccord = password === passwordConfirmation;
-  if (!isAccord) {
-    const error = "패스워드 확인란이 일치하지 않습니다.";
-    return res.status().json({
-      status,
-      error,
+    const data = {
+      id: newUser.dataValues.id,
+      username,
+      point: newUser.dataValues.point,
+    };
+
+    // 최초 로그인 처리
+    const newUserPointLog = await createPointLogByFirstLogin(
+      newUser.dataValues.id,
+    );
+
+    await updateUserByFirstLogin(
+      newUser.dataValues.id,
+      newUser.dataValues.point,
+      newUserPointLog.dataValues.amount,
+    );
+
+    data.point += newUserPointLog.dataValues.amount;
+
+    // 검증 로직 완료, 로그인 로직 수행
+    return req.login(newUser, (loginError) => {
+      if (loginError) {
+        return next(loginError);
+      }
+
+      // 201: Created, 요청에 따른 새로운 자원 생성
+      return res.status(201).json({
+        status: true,
+        data,
+      });
     });
-  }
-
-  // 요청 이메일로 이미 가입된 사용자 있는지 검증
-  const user = await selectUserByEmail(email); // Users.findOne
-  if (user) {
-    const error = "이미 가입된 이메일입니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
-
-  // 패스워드 해싱 && 솔팅 - bcrypt
-  // 데이터베이스에 새 row 생성 - Users.create
-  const newUser = await createUser({
-    email,
-    password: await hashValue(password),
-    username,
-    reset_question: resetQuestion,
-    reset_answer: resetAnswer,
-  });
-
-  const data = {
-    id: newUser.dataValues.id,
-    username,
-    point: newUser.dataValues.point,
-  };
-
-  // 최초 로그인으로 인한 포인트 지급 로그 생성
-  const newUserPointLog = await createPointLogByFirstLogin(
-    newUser.dataValues.id,
-  );
-
-  // 최초 로그인으로 인한 포인트 지급
-  await updateUserByFirstLogin(
-    newUser.dataValues.id,
-    newUser.dataValues.point,
-    newUserPointLog.dataValues.amount,
-  );
-
-  data.point += newUserPointLog.dataValues.amount;
-  status = true;
-
-  // 로그인 처리 - 세션 세이브
-
-  return res.status(200).json({
-    status,
-    data,
-  });
+  })(req, res, next);
 });
 
 //  /user/in 라우터
-router.post("/in", async (req, res) => {
-  const { email, password } = req.body;
+router.post("/in", isNotPrivate, async (req, res, next) => {
+  const { password } = req.body;
 
-  let status = false;
+  passport.authenticate("local", async (isError, user, error) => {
+    if (isError) {
+      return next(error);
+    }
 
-  // 세션 쿠키의 존재 여부 검증
+    // 해당 이메일로 가입한 사용자가 있는지 검증
+    if (!user) {
+      const error = "해당 이메일로 가입된 사용자가 존재하지 않습니다.";
+      // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
+      return res.status(401).json({
+        status: false,
+        error,
+      });
+    }
 
-  const isEmpty = !(email && password);
-  if (isEmpty) {
-    const error = "폼 값이 부적절합니다.";
-    return res.status().json({
-      status,
-      error,
+    const isAccordPassword = compareHashed(password, user.password);
+
+    // 패스워드 검증
+    if (!isAccordPassword) {
+      const error = "패스워드가 일치하지 않습니다.";
+      // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
+      return res.status(401).json({
+        status: false,
+        error,
+      });
+    }
+
+    const data = {
+      id: user.id,
+      point: user.point,
+      username: user.username,
+    };
+
+    const today = getTodayDate();
+    const isFirstLoggedInToday = today !== user.last_logged_in;
+
+    // 오늘의 최초 로그인 검증
+    if (isFirstLoggedInToday) {
+      const newLog = await createPointLogByFirstLogin(user.id);
+      await updateUserByFirstLogin(
+        user.id,
+        user.point,
+        newLog?.dataValues?.amount,
+      );
+
+      // 응답으로 넘겨줄 point 갱신
+      data.point += newLog?.dataValues?.amount;
+    }
+
+    // 검증 로직 완료, 로그인 로직 수행
+    return req.login(user, (loginError) => {
+      if (loginError) {
+        return next(loginError);
+      }
+
+      return res.status(200).json({
+        status: true,
+        data,
+      });
     });
-  }
-
-  // 유저 검색 - Users.findOne
-  const user = await selectUserByEmail(email);
-
-  // 해당 이메일로 가입한 사용자가 있는지 검증
-  if (!user) {
-    const error = "해당 이메일로 가입된 사용자가 존재하지 않습니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
-
-  // 해당 이메일로 가입한 사용자의 패스워드가 일치하는지 검증
-  const isAccordPassword = await compareHashed(
-    password,
-    user.dataValues.password,
-  ); // bcrypt.compare
-  if (!isAccordPassword) {
-    const error = "패스워드가 일치하지 않습니다.";
-    return res.status().json({
-      status,
-      error,
-    });
-  }
-
-  // 오늘의 최초 로그인 여부 검증 및 이에 따른 포인트 지급 결정
-  /**
-   * 1. 유저를 찾는다.
-   * 2. 유저의 last_logged_in 필드를 현재 Date와 비교
-   * 3. 일자가 다른 경우, 포인트 지급 및 새 PointLogs row를 생성.
-   * >>> 일자의 같고 다름을 검증하는 함수가 필요.
-   */
-
-  // TO-DO : 로그인하는 유저의 updated_at 필드의 갱신 여부 확인 필요
-  // 세션 등록
-
-  status = true;
-  const data = {
-    id: user.dataValues.id,
-    username: user.dataValues.username,
-    point: user.dataValues.point,
-  };
-
-  const today = getTodayDate();
-  const isFirstLoggedInToday = today !== user.dataValues.last_logged_in;
-
-  // 오늘의 최초 로그인 - 최초 로그인 포인트 지급
-  if (isFirstLoggedInToday) {
-    // 트랜잭션으로 DB 작업 단위를 묶을 수 있지 않을까?
-    const newLog = await createPointLogByFirstLogin(user.dataValues.id);
-    await updateUserByFirstLogin(
-      user.dataValues.id,
-      user.dataValues.point,
-      newLog.dataValues.amount,
-    );
-
-    data.point += newLog.dataValues.amount;
-  }
-
-  req.session.user = data;
-  req.session.loggedIn = true;
-  // await req.session.save();
-
-  status = true;
-
-  return res.status(200).json({
-    status,
-    data,
-  });
+  })(req, res, next);
 });
 
 //  /user/out 라우터
-router.post("/out", (req, res) => {
-  const { id } = req.session;
+router.post("/out", isPrivate, (req, res, next) => {
+  req.logOut((err) => {
+    if (err) {
+      return next(err);
+    }
 
-  let status = false;
+    req.session.destroy();
 
-  // 현재 세션이 존재하는지?
-  const currentSession = true;
-  if (!currentSession) {
-    const error = "잘못된 접근입니다.";
-    return res.status(401).json({
-      status,
-      error,
+    return res.status(200).json({
+      status: true,
     });
-  }
-  // 세션 파괴
-  // req.session.destroy();
-  status = true;
-
-  return res.status(200).json({
-    status,
   });
 });
 
@@ -218,133 +162,90 @@ router.post("/out", (req, res) => {
 router
   .route("/reset")
   // POST: 이메일 검증
-  .post(async (req, res) => {
+  .post(isNotPrivate, async (req, res, next) => {
     const { email } = req.body;
 
-    let status = false;
+    try {
+      // 유저 검색
+      const user = await selectUserByEmail(email);
 
-    // 이메일 존재 여부
-    const isEmpty = !email;
-    if (isEmpty) {
-      const error = "폼 값이 부적절합니다.";
-      return res.status().json({
-        status,
-        error,
+      // 이메일 존재 여부 검증
+      if (!user) {
+        const error = "존재하지 않는 이메일입니다.";
+        // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
+        return res.status(401).json({
+          status: false,
+          error,
+        });
+      }
+
+      return res.status(200).json({
+        status: true,
+        data: {
+          email,
+          resetQuestion: user.dataValues.reset_question,
+        },
       });
+    } catch (error) {
+      next(error);
     }
-
-    // 유저 검색
-    const user = await selectUserByEmail(email);
-
-    // 이메일 존재 여부 검증
-    if (!user) {
-      const error = "존재하지 않는 이메일입니다.";
-      return res.status().json({
-        status,
-        error,
-      });
-    }
-
-    status = true;
-
-    return res.status(200).json({
-      status,
-      data: {
-        email,
-        resetQuestion: user.dataValues.reset_question,
-      },
-    });
   })
   // PUT: 패스워드 초기화 답변 검증 && 패스워드 변경
-  .put(async (req, res) => {
-    const { email, newPassword, newPasswordConfirmation, resetAnswer } =
-      req.body;
+  .put(isNotPrivate, async (req, res, next) => {
+    const { email, newPassword, resetAnswer } = req.body;
+    try {
+      // 유저 조회 - 패스워드 찾기 질답 검증
+      const user = await selectUserByEmail(email);
+      const isCorrect = resetAnswer === user.dataValues.reset_answer;
+      
+      if (!isCorrect) {
+        const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
+        // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
+        return res.status(401).json({
+          status: false,
+          error,
+        });
+      }
 
-    let status = false;
+      // 유저의 패스워드 업데이트 Users.update
+      await updateUserById(
+        user.dataValues.id,
+        "password",
+        await hashValue(newPassword),
+      );
 
-    const isEmpty = !(
-      email &&
-      newPassword &&
-      newPasswordConfirmation &&
-      resetAnswer
-    );
-    if (isEmpty) {
-      const error = "폼 값이 부적절합니다.";
-      return res.status().json({
-        status,
-        error,
+      return res.status(200).json({
+        status: true,
       });
+    } catch (error) {
+      next(error);
     }
-
-    // 새 패스워드 & 새 패스워드 확인란 일치 여부 검증
-    const isAccord = newPassword === newPasswordConfirmation;
-    if (!isAccord) {
-      const error = "패스워드 확인란이 일치하지 않습니다.";
-      return res.status().json({
-        status,
-        error,
-      });
-    }
-
-    // 유저 조회 - 패스워드 찾기 질답 검증
-    const user = await selectUserByEmail(email);
-
-    const isCorrect = resetAnswer === user.dataValues.reset_answer;
-    if (!isCorrect) {
-      const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
-      return res.status().json({
-        status,
-        error,
-      });
-    }
-
-    // 유저의 패스워드 업데이트 Users.update
-    await updateUserById(
-      user.dataValues.id,
-      "password",
-      await hashValue(newPassword),
-    );
-
-    status = true;
-
-    return res.status(200).json({
-      status,
-    });
   });
 
 //  /user/log 라우터
-router.get("/log", async (req, res) => {
-  const { id } = req.session;
+router.get("/log", isPrivate, async (req, res, next) => {
+  const { user } = req;
   const { skip } = req.query;
+  
+  try {
+    const logsIntstance = await selectPointLogsBySkip(
+      user.id,
+      "id",
+      "DESC",
+      skip,
+    );
+    
+    const logs = logsIntstance.map((inst) => inst.dataValues);
 
-  let status = false;
-
-  const isEmpty = id === undefined;
-  if (isEmpty) {
-    const error = "잘못된 요청입니다.";
-    return res.status(401).json({
-      status,
-      error,
+    return res.status(200).json({
+      status: true,
+      data: {
+        logs,
+      },
     });
+  } catch (error) {
+    next(error);
   }
-
-  // try ~ catch || 에러처리 미들웨어 필요
-  const logsIntstance = await selectPointLogsBySkip(
-    req.sessionStore[req.sessionID].user.id, // 변경 필요
-    "id",
-    "DESC",
-    skip,
-  );
-  const logs = logsIntstance.map((inst) => inst.dataValues);
-
-  status = true;
-
-  return res.status(200).json({
-    status,
-    data: {
-      logs,
-    },
-  });
 });
 
 module.exports = router;
