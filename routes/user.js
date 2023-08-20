@@ -237,7 +237,7 @@ router
   });
 
 // /user/delete
-router("/delete", isPrivate, async (req, res, next) => {
+router.post("/delete", isPrivate, async (req, res, next) => {
   const {
     user: { id },
   } = req;
