@@ -5,6 +5,7 @@ const {
   createUser,
   updateUserById,
   updateUserByFirstLogin,
+  deleteUserById,
 } = require("../controllers/user");
 const {
   createPointLogByFirstLogin,
@@ -193,7 +194,6 @@ router
       return res.status(200).json({
         status: true,
         data: {
-          email,
           resetQuestion: user.dataValues.reset_question,
         },
       });
@@ -235,6 +235,23 @@ router
       next(err);
     }
   });
+
+// /user/delete
+router.post("/delete", isPrivate, async (req, res, next) => {
+  const {
+    user: { id },
+  } = req;
+
+  try {
+    await deleteUserById(id);
+
+    return res.status(200).json({
+      status: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 //  /user/log 라우터
 router.get("/log", isPrivate, async (req, res, next) => {
