@@ -1,7 +1,7 @@
 const userRouter = require("./user");
-const kogptRouter = require("./kogpt");
+const gptRouter = require("./gpt");
 
 module.exports = {
   userRouter,
-  kogptRouter,
+  gptRouter,
 };
