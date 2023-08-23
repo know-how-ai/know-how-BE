@@ -42,7 +42,7 @@ app.use(
       httpOnly: true,
       secure: false,
       signed: true,
-      maxAge: 24 * 60 * 60, // a day
+      maxAge: 24 * 60 * 60 * 1000, // a day
     },
     name: "express-session-cookie",
   }),

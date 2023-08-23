@@ -153,7 +153,7 @@ router.post("/in", isNotPrivate, async (req, res, next) => {
 });
 
 //  /user/out 라우터
-router.post("/out", isPrivate, (req, res, next) => {
+router.post("/out", (req, res, next) => {
   req.logOut((err) => {
     if (err) {
       return next(err);
