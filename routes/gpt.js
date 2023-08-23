@@ -16,7 +16,7 @@ router.post("/coverletter", isPrivate, async (req, res, next) => {
     `${job}에 지원하고자 자기소개서를 다음과 같이 작성했습니다. ` +
     coverletter +
     ` 이 자기소개서에서 잘한 점 3가지, 아쉬운 점 3가지를 작성하고, 전체적인 총평을` +
-    ` {"result": {"good": ["1. ...", "2. ...", ], "bad": ["1. ...", "2. ...", ], "overall": ["..."] }}` +
+    ` {"result": {"good": ["1. ...", "2. ...", "3. ..."], "bad": ["1. ...", "2. ...", "3. ..."], "overall": ["..."] }}` +
     ` 같은 JSON 형태로 작성해주세요.`;
 
   try {
@@ -31,7 +31,7 @@ router.post("/coverletter", isPrivate, async (req, res, next) => {
      *  index: number,
      *  message: {
      *    role: string,
-     *    content: string
+     *    content: any
      *  },
      *  finish_reason: string
      * }
@@ -45,7 +45,7 @@ router.post("/coverletter", isPrivate, async (req, res, next) => {
     return res.status(200).json({
       status: true,
       data: {
-        result: json,
+        result: json?.result,
       },
     });
   } catch (err) {
@@ -65,7 +65,7 @@ router.post("/job", isPrivate, async (req, res, next) => {
     `${description} 내용의 ${project}를` +
     `${skill} 등을 이용하여 진행했으며, ${feature}를 이뤄냈습니다.` +
     `면접 전형에서 받을 가능성이 높은 질문 5개를 ` +
-    `{"questions" : ["...", "...", ]}과 같은 JSON 형식으로 작성해주세요.`;
+    `{"result" : ["1. ...", "2. ...", "3. ...", "4. ...", "5. ..."]}과 같은 JSON 형식으로 작성해주세요.`;
 
   try {
     // GPT 호출
@@ -82,7 +82,7 @@ router.post("/job", isPrivate, async (req, res, next) => {
     return res.status(200).json({
       status: true,
       data: {
-        result: json,
+        result: json?.result,
       },
     });
   } catch (err) {
@@ -100,7 +100,7 @@ router.post("/interview", isPrivate, async (req, res, next) => {
   const prompt =
     `"${personalities}"의 성향을 가진 사람에게 ` +
     "어울리는 직업과 해당 직업에서 그 성향이 중요한 이유와 함께 총 5가지를 " +
-    `{"jobs" : { "job": "...", "description": "..." }} ` +
+    `{"result" : [{ "job": "...", "description": "..." }, { "job": "...", "description": "..." }, { "job": "...", "description": "..." }, { "job": "...", "description": "..." }, { "job": "...", "description": "..." }] } ` +
     `같은 JSON 형태로 추천해주세요.`;
 
   try {
@@ -118,7 +118,7 @@ router.post("/interview", isPrivate, async (req, res, next) => {
     return res.status(200).json({
       status: true,
       data: {
-        result: json,
+        result: json?.result,
       },
     });
   } catch (err) {
