@@ -45,13 +45,9 @@ const selectUserById = async (id) => {
 };
 
 const updateUserById = async (id, column, value) => {
-  if (
-    typeof id !== "number" ||
-    typeof column !== "string" ||
-    typeof value !== "object"
-  ) {
+  if (typeof id !== "number" || typeof column !== "string") {
     console.error(
-      "This function is need to number, string, object type. Please check the arguments.",
+      "This function is need to number and string type. Please check the arguments.",
     );
     return;
   }
@@ -93,9 +89,7 @@ const deleteUserById = async (id) => {
     return;
   }
 
-  const result = await Users.destroy({
-    where: id,
-  });
+  const result = await Users.destroy({ where: { id } });
 
   return result;
 };

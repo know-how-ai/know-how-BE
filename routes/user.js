@@ -213,7 +213,7 @@ router
       const isCorrect = resetAnswer === user.dataValues.reset_answer;
 
       if (!isCorrect) {
-        const error = "패스워드 찾기 질문의 답이 틀렸습니다.";
+        const error = "패스워드 초기화 질문의 답이 틀렸습니다.";
         // 401: Unauthorized, 요청된 리소스에 대해 유효하지 않은 인증 상태
         return res.status(401).json({
           status: false,
@@ -237,19 +237,22 @@ router
   });
 
 // /user/delete
-router.post("/delete", isPrivate, async (req, res, next) => {
+router.post("/delete", isPrivate, (req, res, next) => {
   const {
     user: { id },
   } = req;
 
   try {
-    await deleteUserById(id);
+    deleteUserById(id).then(() => {
+      req.session.destroy();
+    });
 
     return res.status(200).json({
       status: true,
     });
   } catch (err) {
     next(err);
+    console.warn(err);
   }
 });
 
