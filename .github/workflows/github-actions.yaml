@@ -30,8 +30,10 @@ jobs:
       - name: Generate Env variables
         run: |
           echo "COOKIE_SECRET=$COOKIE_SECRET" >> .env
+          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
         env:
-          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }},
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Cache deps
         id: cache

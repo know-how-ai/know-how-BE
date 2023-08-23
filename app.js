@@ -7,7 +7,6 @@ const session = require("express-session");
 const cors = require("cors");
 const passport = require("passport");
 const passportConfig = require("./passport/index");
-const { sequelize } = require("./models");
 const { errorHandler } = require("./middlewares/errorHandler");
 
 // for use env variables
@@ -71,11 +70,11 @@ const corsMiddleware = cors({
   optionsSuccessStatus: 200,
 });
 
-const { kogptRouter, userRouter } = require("./routes");
+const { gptRouter, userRouter } = require("./routes");
 
 app.use(corsMiddleware);
 app.use("/user", userRouter);
-app.use("/kogpt", kogptRouter);
+app.use("/gpt", gptRouter);
 
 // GET / routing
 app.get("/", corsMiddleware, (req, res) => {
@@ -89,8 +88,8 @@ app.get("/", corsMiddleware, (req, res) => {
 app.use(errorHandler);
 
 // connect to database && create tables with models
-sequelize
-  .sync({ alter: true })
+require("./models")
+  .sequelize.sync({ alter: true })
   .then((fulfilled) => {
     console.log("DB 연결 성공. ✅");
   })
