@@ -18,7 +18,7 @@ const afterUsingGPT = async (req, res, next) => {
       data,
     });
   } catch (err) {
-    console.warn(err);
+    // console.warn(err);
     next(err);
   }
 };
