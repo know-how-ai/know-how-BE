@@ -6,7 +6,7 @@ describe("견본 테스트", () => {
     // connect to database && create tables with models
     require("../models")
       .sequelize.sync({ alter: true })
-      .then((fulfilled) => {
+      .then(() => {
         console.log("DB 연결 성공. ✅");
       })
       .catch((err) => console.error(err));

@@ -102,7 +102,7 @@ router.post("/in", isNotPrivate, async (req, res, next) => {
       });
     }
 
-    const isAccordPassword = compareHashed(password, user.password);
+    const isAccordPassword = await compareHashed(password, user.password);
 
     // 패스워드 검증
     if (!isAccordPassword) {
