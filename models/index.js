@@ -2,21 +2,14 @@ const Sequelize = require("sequelize");
 const dotenv = require("dotenv");
 dotenv.config();
 
-// const env = process.env.NODE_ENV || "development";
+const env = process.env.NODE_ENV || "development";
+const config = require("../config/config")[env];
 
 const sequelize = new Sequelize(
-  process.env.DB_SCHEMA,
-  process.env.DB_ID,
-  process.env.DB_PASSWORD,
-  {
-    database: process.env.DB_SCHEMA,
-    username: process.env.DB_ID,
-    password: process.env.DB_PASSWORD,
-    dialect: "mysql",
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    logging: (...logs) => console.log(logs[0]),
-  },
+  config.database,
+  config.username,
+  config.password,
+  config,
 );
 
 const Users = require("./users");
