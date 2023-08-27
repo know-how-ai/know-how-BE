@@ -86,15 +86,17 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // for resolve 'cors' issue
-if (process.env.NODE_ENV !== "production") {
-  const cors = require("cors");
-  const corsMiddleware = cors({
-    origin: "http://localhost:3000",
-    optionsSuccessStatus: 200,
-  });
+const corsMiddleware = require("cors")({
+  origin: ["http://localhost:3000", "https://urworkhelper.net"],
+});
 
+const { gptRouter, userRouter } = require("./routes");
+
+app.use(corsMiddleware);
+
+if (process.env.NODE_ENV !== "production") {
   // GET / routing
-  app.get("/", corsMiddleware, (req, res) => {
+  app.get("/", (req, res) => {
     return res.status(200).json({
       message: "Hi!",
       status: 200,
@@ -102,9 +104,6 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-const { gptRouter, userRouter } = require("./routes");
-
-// app.use(corsMiddleware);
 app.use("/user", userRouter);
 app.use("/gpt", gptRouter);
 
