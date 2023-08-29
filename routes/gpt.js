@@ -29,6 +29,7 @@ router.post(
       req.data = {
         result: json?.result,
       };
+      req.gptType = "자소서 코칭";
 
       next();
     } catch (err) {
@@ -62,6 +63,7 @@ router.post(
       req.data = {
         result: json?.result,
       };
+      req.gptType = "면접 코칭";
 
       next();
     } catch (err) {
@@ -84,11 +86,6 @@ router.post(
     const str =
       personalities.length === 1 ? personalities[0] : personalities.join(", ");
 
-    // const prompt =
-    //   `'${str}'의 성향을 가진 사람에게 ` +
-    //   "가장 추천할만한 직업과 사유 3가지를 " +
-    //   `{"result" : [{ "job": "...", "description": "..." }, ... ]} ` +
-    //   `와 같은 형태의 JSON 형식으로 작성해주세요.`;
     const prompt =
       `'${str}'의 성향을 가진 사람에게 ` +
       "가장 추천할만한 직업과 적합한 근거를 덧붙인 답변 총 3가지를 " +
@@ -102,6 +99,7 @@ router.post(
       req.data = {
         result: json?.result,
       };
+      req.gptType = "직업 추천";
 
       next();
     } catch (err) {

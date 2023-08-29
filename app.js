@@ -72,12 +72,12 @@ const sessionOptions = {
     maxAge: 24 * 60 * 60 * 1000, // a day
   },
   store: new RedisStore({ client: redisClient }), // set redis cache
-  name: "know-how",
+  name: "ur-work-helper",
 };
 
 if (process.env.NODE_ENV === "production") {
   sessionOptions.proxy = true;
-  sessionOptions.cookie.secure = true;
+  // sessionOptions.cookie.secure = true;
 }
 
 // for using session
@@ -87,7 +87,12 @@ app.use(passport.session());
 
 // for resolve 'cors' issue
 const corsMiddleware = require("cors")({
-  origin: ["http://localhost:3000", "https://urworkhelper.net"],
+  origin: [
+    "http://localhost:3000",
+    "http://urworkhelper.net",
+    "https://urworkhelper.net",
+  ],
+  credentials: true,
 });
 
 const { gptRouter, userRouter } = require("./routes");
