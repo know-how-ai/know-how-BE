@@ -11,7 +11,8 @@
 
 ---
 
-![preview](https://github.com/know-how-ai/know-how-FE/blob/main/public/preview.gif?raw=true)
+![preview](https://github.com/know-how-ai/know-how-FE/blob/dev/public/service_preview.gif?raw=true)
+
 
 ---
 
