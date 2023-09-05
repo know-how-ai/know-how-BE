@@ -14,15 +14,17 @@ const RedisStore = require("connect-redis").default;
 // for use env variables
 require("dotenv").config();
 
-const redisClient = redis.createClient({
-  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-  password: process.env.REDIS_PASSWORD,
-});
+if (process.env.NODE_ENV === "production") {
+  const redisClient = redis.createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD,
+  });
 
-try {
-  redisClient.connect();
-} catch (err) {
-  console.warn(err);
+  try {
+    redisClient.connect();
+  } catch (err) {
+    console.warn(err);
+  }
 }
 const app = express();
 passportConfig(); // configure passport for auth
@@ -71,12 +73,12 @@ const sessionOptions = {
     signed: true,
     maxAge: 24 * 60 * 60 * 1000, // a day
   },
-  store: new RedisStore({ client: redisClient }), // set redis cache
   name: "ur-work-helper",
 };
 
 if (process.env.NODE_ENV === "production") {
   sessionOptions.proxy = true;
+  sessionOptions.store = new RedisStore({ client: redisClient }); // set redis cache
   // sessionOptions.cookie.secure = true;
 }
 
